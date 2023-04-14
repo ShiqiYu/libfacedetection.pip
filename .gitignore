@@ -196,3 +196,7 @@ android/gradlew
 dist/
 
 **/*egg*
+
+demo.ipynb
+
+toolchains
