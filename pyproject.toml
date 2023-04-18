@@ -1,55 +1,94 @@
 [build-system]
-# requires = [ "setuptools", "wheel", "pybind11>=2.10.0"]
-requires = [ "setuptools >= 59.2.0", "pybind11>=2.10.0", "scikit-build>=0.13.2", "cmake>=3.18.0", "ninja"]
+# requires = [ "setuptools", "pybind11>=2.10.0"]
+requires = [ 
+  "setuptools >= 42", 
+  "pybind11>=2.10.0", 
+]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "yudet"
-description = "A fast face detector."
-keywords = ["face detection"]
-version = "0.0.1"
-authors = [
-  { name="Wwupup", email="12032501@mail.sustech.edu.cn" },
-]
-readme = "README.md"
-requires-python = ">=3.6"
-license = { file = "LICENSE" }
-classifiers = [
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: C++",
-    "License :: OSI Approved :: BSD License",
-    "Operating System :: POSIX :: Linux",
-    "Classifier: Operating System :: Microsoft :: Windows",
-    "Development Status :: 4 - Beta",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Software Development",
-    "Intended Audience :: Developers",
-]
+# [project]
+# name = "libfacedetection"
+# description = "A fast face detector."
+# keywords = ["face detection"]
+# version = "0.0.1"
+# authors = [
+#   { name="Wwupup", email="12032501@mail.sustech.edu.cn" },
+# ]
+# readme = "README.md"
+# requires-python = ">=3.6"
+# license = { file = "LICENSE" }
+# classifiers = [
+#     "Programming Language :: Python",
+#     "Programming Language :: Python :: 3",
+#     "Programming Language :: Python :: 3 :: Only",
+#     "Programming Language :: Python :: 3.6",
+#     "Programming Language :: Python :: 3.7",
+#     "Programming Language :: Python :: 3.8",
+#     "Programming Language :: Python :: 3.9",
+#     "Programming Language :: Python :: 3.10",
+#     "Programming Language :: Python :: 3.11",
+#     "Programming Language :: C++",
+#     "License :: OSI Approved :: BSD License",
+#     "Operating System :: POSIX :: Linux",
+#     "Classifier: Operating System :: Microsoft :: Windows",
+#     "Development Status :: 4 - Beta",
+#     "Topic :: Scientific/Engineering",
+#     "Topic :: Software Development",
+#     "Intended Audience :: Developers",
+# ]
 
-[project.urls]
-"Homepage" = "https://github.com/Wwupup/libfacedetection.pypi"
-"Bug Tracker" = "https://github.com/Wwupup/libfacedetection.pypi/issues"
+# [project.urls]
+# "Homepage" = "https://github.com/Wwupup/libfacedetection.pypi"
+# "Bug Tracker" = "https://github.com/Wwupup/libfacedetection.pypi/issues"
 
-# [tool.setuptools.packages.find]
+
+# [tool.setuptools]
+# packages = ["yudet"]
+# package-dir = {"" = "src"}
 
 [tool.cibuildwheel]
-manylinux-x86_64-image = "manylinux_2_24"
-manylinux-aarch64-image = "manylinux_2_24"
+build = "*"
+build-frontend = "pip"
+config-settings = {}
+dependency-versions = "pinned"
+environment = {}
+environment-pass = []
+build-verbosity = 1
 
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
+before-all = ""
+before-build = ""
+
+test-skip = ""
+before-test = ""
+test-extras = []
+test-requires = "pytest"
+test-command = "pytest {project}/tests"
+
+container-engine = "docker"
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "*-manylinux_aarch64", "*-manylinux_ppc64le", "*-manylinux_s390x"]
+manylinux-x86_64-image = "manylinux_2_24"
+# manylinux-aarch64-image = "manylinux2014"
+
+
+# [[tool.cibuildwheel.overrides]]
+# select = "cp36-*"
+# manylinux-x86_64-image = "manylinux1"
+
+# [[tool.cibuildwheel.overrides]]
+# select = "cp3{7,8,9}-*"
+# manylinux-x86_64-image = "manylinux2010"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
+before-build = [
+    "pip install delvewheel",
+    "if exist build rmdir /s /q build",
+]
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
 
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --plat manylinux_2_24_$(uname -m)"
-archs = ["x86_64", "aarch64"]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}  --plat manylinux_2_24_$(uname -m)"
+archs = ["x86_64"]
+before-build = "rm -rf {project}/build"
+
