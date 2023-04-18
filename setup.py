@@ -5,6 +5,9 @@ from setuptools import setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 from pybind11.setup_helpers import Pybind11Extension
+
+from glob import glob
+import subprocess
 import os
 import platform
 import sys
@@ -12,21 +15,25 @@ import shutil
 
 __version__ = "0.0.1"
 
-lib_name = 'facedetection'
-lib_dir = ''
+root_dir = os.path.dirname(os.path.abspath(__file__))
+
+cmake_args = [
+    '-DCMAKE_BUILD_TYPE=Release',
+    '-DBUILD_SHARED_LIBS=ON',
+    '-DDEMO=OFF',
+]
 
 # linux
 if sys.platform == "linux" or sys.platform == "linux2":
-    if platform.uname()[4] == 'AMD64' or platform.uname()[4] == 'x86_64':
-            lib_dir = 'lib/linux/x64/avx2'
-    elif platform.uname()[4] == 'aarch64':
-            lib_dir = 'lib/linux/aarch64/avx2'
+    if platform.uname()[4] == 'AMD64' or platform.uname()[4] == 'x86_64' or platform.uname()[4] == 'aarch64':
+        cmake_args.append('-DENABLE_AVX2=ON')
+        cmake_args.append('-DENABLE_AVX512=OFF')
+        cmake_args.append('-DENABLE_NEON=OFF')
     else:
-            lib_dir = 'lib/linux/arm/neon'
+        cmake_args.append('-DENABLE_AVX2=OFF')
+        cmake_args.append('-DENABLE_AVX512=OFF')
+        cmake_args.append('-DENABLE_NEON=ON')
     ext_args = dict(        
-        include_dirs=['include'],
-        libraries = [lib_name],
-        library_dirs = [lib_dir],
         extra_link_args = ["-Wl,-rpath=$ORIGIN"],
         define_macros = [('VERSION_INFO', __version__)],
         language='c++',
@@ -35,11 +42,10 @@ if sys.platform == "linux" or sys.platform == "linux2":
     
 # windows
 elif sys.platform == "win":
-    lib_dir = 'lib/win/x64/avx2'
+    cmake_args.append('-DENABLE_AVX2=ON')
+    cmake_args.append('-DENABLE_AVX512=OFF')
+    cmake_args.append('-DENABLE_NEON=OFF')
     ext_args = dict(
-        include_dirs=['include'], 
-        libraries=[lib_name],
-        library_dirs = [lib_dir],
         extra_link_args = ["-Wl,-rpath=$ORIGIN"],
         define_macros = [('VERSION_INFO', __version__)],
         language='c++',
@@ -63,17 +69,47 @@ def copylibs(src, dst):
     else:
         shutil.copy2(src, dst)
 
+def build_submodule(ext:build_ext):
+    src_dir = os.path.join(root_dir, 'libfacedetection')
+    build_dir_submodule = os.path.join(os.path.abspath(ext.build_temp), 'libfacedetection')
+    if not os.path.exists(build_dir_submodule):
+        os.makedirs(build_dir_submodule)
+
+    include_dir = os.path.join(build_dir_submodule, 'include')
+    lib_dir = os.path.join(build_dir_submodule, 'lib')
+
+    cmake_args.append('-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir)
+    subprocess.check_call(['cmake', '-S', src_dir] + cmake_args, cwd=build_dir_submodule)
+    subprocess.check_call(['cmake', '--build', build_dir_submodule, '--config', 'Release'], cwd=build_dir_submodule)
+
+    # copy header file
+    if not os.path.exists(include_dir):
+        os.makedirs(include_dir)
+    export_header_file = glob(os.path.join(build_dir_submodule, '*.h'))[0]
+    header_file = glob(os.path.join(src_dir, 'src', '*.h'))[0]
+    shutil.copy2(export_header_file, os.path.join(include_dir, os.path.basename(export_header_file)))
+    shutil.copy2(header_file, os.path.join(include_dir, os.path.basename(header_file)))
+
+    ext.include_dirs.append(include_dir)
+    ext.library_dirs.append(lib_dir)
+    ext.libraries.append('facedetection')
+
 class CustomBuildExt(build_ext):
     def run(self):
+        build_submodule(self)
         build_ext.run(self)
+
         dst = os.path.join(self.build_lib, "yudet")
-        copylibs(lib_dir, dst)
+
+        # copy dynamic libs
+        copylibs(self.library_dirs[0], dst)
+
+        # move generated extension libs
         filelist = os.listdir(self.build_lib)
         for file in filelist:
             filePath = os.path.join(self.build_lib, file)
             if not os.path.isdir(filePath):
                 copylibs(filePath, dst)
-                # delete file for wheel package
                 os.remove(filePath)
 
 # class CustomBuildExtDev(build_ext):
