@@ -135,7 +135,7 @@ setup(
     author_email="12032501@mail.sustech.edu.cn",
     url="https://github.com/Wwupup/libfacedetection.pypi",
     description="A face detection library based on libfacedetection",
-    license="BSD",
+    license="./LISENCE",
     packages=["yudet"],
     package_dir={"yudet": "src/yudet"},
     classifiers=[

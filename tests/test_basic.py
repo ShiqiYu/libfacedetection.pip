@@ -1,4 +1,4 @@
-import build.yudet as m
+import yudet as m
 
 
 def test_main():
