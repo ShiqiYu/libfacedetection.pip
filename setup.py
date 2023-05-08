@@ -21,7 +21,15 @@ cmake_args = [
     '-DCMAKE_BUILD_TYPE=Release',
     '-DBUILD_SHARED_LIBS=ON',
     '-DDEMO=OFF',
+    '-DUSE_OPENMP=ON'
 ]
+
+ext_args = dict(        
+    extra_link_args = ["-Wl,-rpath=$ORIGIN"],
+    define_macros = [('VERSION_INFO', __version__)],
+    language='c++',
+    cxx_std=11,
+)
 
 # linux
 if sys.platform == "linux" or sys.platform == "linux2":
@@ -33,24 +41,14 @@ if sys.platform == "linux" or sys.platform == "linux2":
         cmake_args.append('-DENABLE_AVX2=OFF')
         cmake_args.append('-DENABLE_AVX512=OFF')
         cmake_args.append('-DENABLE_NEON=ON')
-    ext_args = dict(        
-        extra_link_args = ["-Wl,-rpath=$ORIGIN"],
-        define_macros = [('VERSION_INFO', __version__)],
-        language='c++',
-        cxx_std=11,
-    )
+
     
 # windows
 elif sys.platform == "win":
     cmake_args.append('-DENABLE_AVX2=ON')
     cmake_args.append('-DENABLE_AVX512=OFF')
     cmake_args.append('-DENABLE_NEON=OFF')
-    ext_args = dict(
-        extra_link_args = ["-Wl,-rpath=$ORIGIN"],
-        define_macros = [('VERSION_INFO', __version__)],
-        language='c++',
-        cxx_std=11,
-    )
+
 
 yudet_modules = [
     Pybind11Extension(
