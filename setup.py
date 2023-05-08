@@ -20,8 +20,8 @@ with open(".version", "r") as f:
     version_tag[-1] += 1
     version = '.'.join([str(x) for x in version_tag])
 
-with open(".version", "w") as f:
-    f.write(version)
+# with open(".version", "w") as f:
+#     f.write(version)
 __version__ = version
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -139,10 +139,10 @@ class CustomBuildExt(build_ext):
 setup(
     name="yudet",
     keywords = ["face detection"],
-    version = "0.0.1",
+    version = __version__,
     author="Wwupup",
     author_email="12032501@mail.sustech.edu.cn",
-    url="https://github.com/Wwupup/libfacedetection.pypi",
+    url="https://github.com/ShiqiYu/libfacedetection.pip",
     description="A face detection library based on libfacedetection",
     license="./LISENCE",
     packages=["yudet"],
