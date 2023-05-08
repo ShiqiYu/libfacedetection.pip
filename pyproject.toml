@@ -7,10 +7,10 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 # [project]
-# name = "libfacedetection"
+# name = "yudet"
+# version = "0.0.1"
 # description = "A fast face detector."
 # keywords = ["face detection"]
-# version = "0.0.1"
 # authors = [
 #   { name="Wwupup", email="12032501@mail.sustech.edu.cn" },
 # ]

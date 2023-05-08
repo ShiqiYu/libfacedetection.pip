@@ -13,7 +13,16 @@ import platform
 import sys
 import shutil
 
-__version__ = "0.0.1"
+with open(".version", "r") as f:
+    version = f.read().strip()
+    print(version)
+    version_tag = [int(x) for x in version.split('.')]
+    version_tag[-1] += 1
+    version = '.'.join([str(x) for x in version_tag])
+
+with open(".version", "w") as f:
+    f.write(version)
+__version__ = version
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,7 +34,7 @@ cmake_args = [
 ]
 
 ext_args = dict(        
-    extra_link_args = ["-Wl,-rpath=$ORIGIN"],
+    extra_link_args = [],
     define_macros = [('VERSION_INFO', __version__)],
     language='c++',
     cxx_std=11,
@@ -41,6 +50,7 @@ if sys.platform == "linux" or sys.platform == "linux2":
         cmake_args.append('-DENABLE_AVX2=OFF')
         cmake_args.append('-DENABLE_AVX512=OFF')
         cmake_args.append('-DENABLE_NEON=ON')
+    ext_args['extra_link_args'].append('-Wl,-rpath=$ORIGIN')
 
     
 # windows
@@ -48,6 +58,7 @@ elif sys.platform == "win":
     cmake_args.append('-DENABLE_AVX2=ON')
     cmake_args.append('-DENABLE_AVX512=OFF')
     cmake_args.append('-DENABLE_NEON=OFF')
+    ext_args['extra_link_args'].append('-Wl,-rpath=$ORIGIN')
 
 
 yudet_modules = [
@@ -149,7 +160,7 @@ setup(
         "Programming Language :: C++",
         "License :: OSI Approved :: BSD License",
         "Operating System :: POSIX :: Linux",
-        "Classifier: Operating System :: Microsoft :: Windows",
+        "Operating System :: Microsoft :: Windows",
         "Development Status :: 4 - Beta",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
