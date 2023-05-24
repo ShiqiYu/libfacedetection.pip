@@ -19,9 +19,9 @@ py::array_t<short> detect(py::array_t<unsigned char> &input){
         throw std::runtime_error("Can not alloc buffer.");
     }
 	int * pResults = nullptr; 
-    pResults = facedetect_cnn(pBuffer, (unsigned char*)input_info.ptr, input_info.shape[1], input_info.shape[0], input_info.shape[1] * input_info.shape[2]);
+    pResults = facedetect_cnn(pBuffer, (unsigned char*)input_info.ptr, int(input_info.shape[1]), int(input_info.shape[0]), int(input_info.shape[1] * input_info.shape[2]));
     
-    std::vector<ssize_t> bbox_shape{ pResults[0], 16 };
+    std::vector<py::ssize_t> bbox_shape{ pResults[0], 16 };
     py::array_t<short> bbox_buffer = py::array_t<short>(
         bbox_shape, 
         {bbox_shape[1] * sizeof(short), sizeof(short)}, 
@@ -30,7 +30,7 @@ py::array_t<short> detect(py::array_t<unsigned char> &input){
 }
 
 
-PYBIND11_MODULE(yudet, m) {
+PYBIND11_MODULE(yuface, m) {
     m.doc() = "A tiny and fast face detector"; // optional module docstring
     m.def("detect", &detect, "The main detetion function");
 }

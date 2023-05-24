@@ -1,24 +1,17 @@
-<!-- ```shell
-pip install cibuildwheel
-cibuildwheel --platform linux
-
-twine upload --repository testpypi wheelhouse
-pip install -i https://test.pypi.org/simple/ yudet==0.0.1
-pip install ./wheelhouse/xx.whl
-``` -->
-
-# Introduction 
+# Yuface
+[![PyPI](https://img.shields.io/pypi/v/yuface.svg)](https://pypi.python.org/pypi/yuface)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+## Introduction 
 A super fast face detector packaged by the [libfacedetection](https://github.com/ShiqiYu/libfacedetection) repository using pybind11.
-# Change Log
-## 2023-5-8
-Project init
+## Change Log
+[2023-5-8] Project init.
 
 ## Quick start
 ```shell
-pip install yudet
+pip install yuface
 ```
 
-## Usage
+### Usage
 1. Load image
 ```python
 # opencv
@@ -40,9 +33,9 @@ img = img[:, :, ::-1]                           # convert to BGR
 2. Detect
 ```python
 # img: numpy.ndarray, shape=(H, W, 3), dtype=uint8, BGR
-# conf_thresh: float, confidence threshold, default=50, range=[0, 100]
-from yudet import detect
-confs, bboxes, landmarks = detect(img, conf_thresh=50)
+# conf_thresh: float, confidence threshold, default=0.5, range=[0.0, 0.1]
+from yuface import detect
+confs, bboxes, landmarks = detect(img, conf_thresh=0.5)
 ```
 3. Deal result
 ```python

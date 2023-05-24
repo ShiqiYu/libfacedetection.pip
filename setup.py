@@ -13,21 +13,23 @@ import platform
 import sys
 import shutil
 
-with open(".version", "r") as f:
-    version = f.read().strip()
-    print(version)
-    version_tag = [int(x) for x in version.split('.')]
-    version_tag[-1] += 1
-    version = '.'.join([str(x) for x in version_tag])
+# with open(".version", "r") as f:
+#     version = f.read().strip()
+#     print(version)
+#     version_tag = [int(x) for x in version.split('.')]
+#     version_tag[-1] += 1
+#     version = '.'.join([str(x) for x in version_tag])
 
 # with open(".version", "w") as f:
 #     f.write(version)
-__version__ = version
+# __version__ = version
+
+# 2023-5 first release
+__version__ = '2023.5.0'
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 cmake_args = [
-    '-DCMAKE_BUILD_TYPE=Release',
     '-DBUILD_SHARED_LIBS=ON',
     '-DDEMO=OFF',
     '-DUSE_OPENMP=ON'
@@ -51,19 +53,18 @@ if sys.platform == "linux" or sys.platform == "linux2":
         cmake_args.append('-DENABLE_AVX512=OFF')
         cmake_args.append('-DENABLE_NEON=ON')
     ext_args['extra_link_args'].append('-Wl,-rpath=$ORIGIN')
+    cmake_args.append('-DCMAKE_BUILD_TYPE=Release')
 
     
 # windows
-elif sys.platform == "win":
+elif sys.platform == "win32":
     cmake_args.append('-DENABLE_AVX2=ON')
     cmake_args.append('-DENABLE_AVX512=OFF')
     cmake_args.append('-DENABLE_NEON=OFF')
-    ext_args['extra_link_args'].append('-Wl,-rpath=$ORIGIN')
-
-
-yudet_modules = [
+    cmake_args.append('-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE')
+yuface_modules = [
     Pybind11Extension(
-        "yudet",
+        "yuface",
         ["src/main.cpp"],
         **ext_args
         ),
@@ -86,6 +87,10 @@ def build_submodule(ext:build_ext):
 
     include_dir = os.path.join(build_dir_submodule, 'include')
     lib_dir = os.path.join(build_dir_submodule, 'lib')
+    if not os.path.exists(include_dir):
+        os.makedirs(include_dir)
+    if not os.path.exists(lib_dir):
+        os.makedirs(lib_dir)
 
     cmake_args.append('-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + lib_dir)
     subprocess.check_call(['cmake', '-S', src_dir] + cmake_args, cwd=build_dir_submodule)
@@ -98,6 +103,8 @@ def build_submodule(ext:build_ext):
     header_file = glob(os.path.join(src_dir, 'src', '*.h'))[0]
     shutil.copy2(export_header_file, os.path.join(include_dir, os.path.basename(export_header_file)))
     shutil.copy2(header_file, os.path.join(include_dir, os.path.basename(header_file)))
+    if sys.platform == 'win32':
+        copylibs(os.path.join(build_dir_submodule, 'Release'), lib_dir)
 
     ext.include_dirs.append(include_dir)
     ext.library_dirs.append(lib_dir)
@@ -107,11 +114,11 @@ class CustomBuildExt(build_ext):
     def run(self):
         build_submodule(self)
         build_ext.run(self)
-
-        dst = os.path.join(self.build_lib, "yudet")
-
+        
+        dst = os.path.join(self.build_lib, "yuface")
+        
         # copy dynamic libs
-        copylibs(self.library_dirs[0], dst)
+        copylibs(self.library_dirs[-1], dst)
 
         # move generated extension libs
         filelist = os.listdir(self.build_lib)
@@ -120,24 +127,30 @@ class CustomBuildExt(build_ext):
             if not os.path.isdir(filePath):
                 copylibs(filePath, dst)
                 os.remove(filePath)
+        os.path.dirname
+class CustomBuildExtDev(build_ext):
+    def run(self):
+        build_submodule(self)
+        build_ext.run(self)
 
-# class CustomBuildExtDev(build_ext):
-#     def run(self):
-#         build_ext.run(self)
-#         dev_folder = os.path.join(os.path.dirname(__file__), 'barcodeQrSDK')
-#         copylibs(lib_dir, dev_folder)
-#         filelist = os.listdir(self.build_lib)
-#         for file in filelist:
-#             filePath = os.path.join(self.build_lib, file)
-#             if not os.path.isdir(file):
-#                 copylibs(filePath, dev_folder)
+        dev_folder = os.path.join(os.path.dirname(__file__), "yuface")
 
-# class CustomInstall(install):
-#     def run(self):
-#         install.run(self)
+        # copy dynamic libs
+        copylibs(self.library_dirs[-1], dev_folder)
+
+        # move generated extension libs
+        filelist = os.listdir(self.build_lib)
+        for file in filelist:
+            filePath = os.path.join(self.build_lib, file)
+            if not os.path.isdir(filePath):
+                copylibs(filePath, dev_folder)
+
+class CustomInstall(install):
+    def run(self):
+        install.run(self)
 
 setup(
-    name="yudet",
+    name="yuface",
     keywords = ["face detection"],
     version = __version__,
     author="Wwupup",
@@ -145,8 +158,8 @@ setup(
     url="https://github.com/ShiqiYu/libfacedetection.pip",
     description="A face detection library based on libfacedetection",
     license="./LISENCE",
-    packages=["yudet"],
-    package_dir={"yudet": "src/yudet"},
+    packages=["yuface"],
+    package_dir={"yuface": "src/yuface"},
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
@@ -166,6 +179,8 @@ setup(
         "Topic :: Software Development",
         "Intended Audience :: Developers",
     ],
-    ext_modules=yudet_modules, 
-    cmdclass={'build_ext': CustomBuildExt}
+    ext_modules=yuface_modules, 
+    cmdclass={'build_ext': CustomBuildExt,
+              'develop': CustomBuildExtDev,
+              'install': CustomInstall}
 )
