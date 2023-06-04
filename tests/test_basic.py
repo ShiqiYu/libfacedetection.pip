@@ -1,4 +1,4 @@
-import yudet as m
+import yuface as m
 
 
 def test_main():
