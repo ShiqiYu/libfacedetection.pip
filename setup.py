@@ -12,6 +12,7 @@ import os
 import platform
 import sys
 import shutil
+import io
 
 # with open(".version", "r") as f:
 #     version = f.read().strip()
@@ -25,7 +26,7 @@ import shutil
 # __version__ = version
 
 # 2023-5 first release
-__version__ = '2023.5.0'
+__version__ = '2023.5.1'
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -149,10 +150,15 @@ class CustomInstall(install):
     def run(self):
         install.run(self)
 
+
+long_description = io.open("README.md", encoding="utf-8").read()
+
 setup(
     name="yuface",
     keywords = ["face detection"],
     version = __version__,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="Wwupup",
     author_email="12032501@mail.sustech.edu.cn",
     url="https://github.com/ShiqiYu/libfacedetection.pip",
